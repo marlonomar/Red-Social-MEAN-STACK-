@@ -4,9 +4,12 @@ const express = require('express');
 const userController = require('../controllers/user');
 const api = express.Router();
 
+api.get('/show-users',userController.getActiveUsers);
+api.get('/user/:id',userController.getUser);
+api.get('/deleted-users',userController.getDeleteUsers);
 api.get('/show-all-users',userController.getAllUsers);
 api.post('/create-user',userController.createUser);
-api.put('/upload-user',userController.UploadUser);
-api.delete('/delete-user',userController.DeleteUser);
+api.put('/upload-user/:id',userController.UploadUser);
+api.delete('/delete-user/:id',userController.DeleteUser);
 
 module.exports = api;

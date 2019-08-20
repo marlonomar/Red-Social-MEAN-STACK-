@@ -4,11 +4,53 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt');
 
 function getAllUsers (req,res){
-    res.status(200)
-       .json({
-           success: true,
-           mensaje : 'GET USERS TRUE'
-       })
+    User.find().exec((err,user)=>{
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }else{
+            res.json({
+                success:true,
+                user
+            })
+        }
+    })
+}
+
+function getActiveUsers (req,res){
+    
+    User.find({ative:true}).exec((err,user)=>{
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }else{
+            res.json({
+                success:true,
+                user
+            })
+        }
+    })
+}
+
+function getDeleteUsers (req,res){
+
+    User.find({ative:false}).exec((err,user)=>{
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }else{
+            res.json({
+                success:true,
+                user
+            })
+        }
+    })
 }
 
 function createUser (req,res){
@@ -20,7 +62,7 @@ function createUser (req,res){
         surname : body.surname,
         nickname : body.nickname,
         email : body.email,
-        password : body.password,
+        password : bcrypt.hashSync(body.password,10),
         role: body.role,
         image : body.image
     });
@@ -46,25 +88,77 @@ function createUser (req,res){
 }
 
 function UploadUser (req,res){
-    res.status(200)
-       .json({
-           success : true,
-           mensaje : 'PUT USER TRUE'
-       })
+    let id = req.params.id;
+    let body = req.body;
+    
+    User.findByIdAndUpdate(id,body,{new:true},(err,usuario)=>{
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }
+        res.json({
+            success:true,
+            user: usuario
+        })
+    })
 }
 
 function DeleteUser (req,res){
-    res.status(200)
-       .json({
-           success : true,
-           mensaje : 'DELETE USER TRUE'
+    let id = req.params.id;
+    let active= {
+        active:false
+    }
+    User.findByIdAndUpdate(id,active,{new : true},(err,remove)=>{
+
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }
+    
+        if(!remove){
+            return res.status(400).json({
+                success: false,
+                err : {
+                    mensaje : 'registro no encontrado'
+                }
+            })
+        }
+    
+        res.json({
+            delete: true,
+            registro: remove
+        })
+    
        })
+}
+
+function getUser(req,res){
+    let id = req.params.id;
+    User.find({_id : id}).exec((err,user)=>{
+        if(err){
+            return res.status(400).json({
+                success: false,
+                err
+            })
+        }
+        res.json({
+            success:true,
+            user:user
+        })
+    });
 }
 
 module.exports ={
     getAllUsers,
     createUser,
     UploadUser,
-    DeleteUser
+    DeleteUser,
+    getActiveUsers,
+    getUser,
+    getDeleteUsers
 }
 

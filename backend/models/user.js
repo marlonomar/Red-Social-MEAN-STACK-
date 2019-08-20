@@ -1,4 +1,5 @@
 'use strict'
+
 const mongoose = require('mongoose');
 const Shema = mongoose.Schema;
 const uniqueValidator = require('mongoose-unique-validator');
@@ -14,6 +15,7 @@ let User = new Shema({
     },
     nickname:{
         type:String,
+        unique:true,
         required:[true,'the nickname is required']
     },
     email:{
@@ -31,6 +33,10 @@ let User = new Shema({
     image:{
         type:String,
         default:null
+    },
+    active:{
+        type: Boolean,
+        default: true
     }
 });
 
