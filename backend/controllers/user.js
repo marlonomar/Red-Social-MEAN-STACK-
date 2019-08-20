@@ -2,6 +2,7 @@
 
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const jwt = require('../services/token');
 
 function getAllUsers (req,res){
     User.find().exec((err,user)=>{
@@ -193,25 +194,37 @@ function loginUser(req,res){
         if(err) return res.status(500).res.json({success:false,mensaje:'error en la peticion'});
 
         if(user){
+
             bcrypt.compare(password, user.password, (err,check)=>{
 
                 if(check){
                     user.password = undefined;
+                    
                    if(user.active == true){
+                      if(params.token){
+                        return res.status(200).json({
+                            token: jwt.createToken(user)
+                        })
+                      }
+                      else{
                         return res.status(200).json({
                             success:true,
                             mensaje: 'Usuario Identificado',
                             user : user
-                    })
-                   }else{
+                        })
+                      }
+                   }
+                   else{
                        return res.status(404).send({success:false,mensaje:'Usuario inactivo'})
                    }
                 }
+
                 else{
                     return res.status(404).send({success:false,mensaje:'clave invalida'});
                 }
             })
         }
+
         else{
             return res.status(404).send({success:false,mensaje:'usuario invalido'});
         }
