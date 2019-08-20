@@ -17,14 +17,11 @@ app.use(bodyParser.json());
 app.set('json spaces 2',2)
 app.use(express.json());
 
-//MODELOS
-const User = require('./models/user');
+//Routes Controllers
+let routes = require('./Routes/user');
 
-//PETICIONES
-app.get('/',(req,res)=>{
-    
-  
-})
+//Routes
+app.use('/user',routes);
 
 app.listen(3000,()=>{
     console.log('servidor funcionando en http://localhost:3000');

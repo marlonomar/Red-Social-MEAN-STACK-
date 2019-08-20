@@ -3,6 +3,10 @@
 //SERVER
 require('./app');
 
+
+//PETICIONES
+require('./Routes/user');
+
 //MONGOOSE
 
 const mongoose= require('mongoose');
