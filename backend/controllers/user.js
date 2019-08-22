@@ -32,7 +32,7 @@ function getAllUsers (req,res){
 
 function getActiveUsers (req,res){
 
-    User.find({ative:true}).exec((err,user)=>{
+    User.find({active : true}).exec((err,user)=>{
         if(err){
             return res.status(400).json({
                 success: false,
@@ -49,7 +49,7 @@ function getActiveUsers (req,res){
 
 function getDeleteUsers (req,res){
 
-    User.find({ative:false}).exec((err,user)=>{
+    User.find({ active : false}).exec((err,user)=>{
         if(err){
             return res.status(400).json({
                 success: false,
@@ -245,6 +245,10 @@ function uploadAvatar (req,res){
     let id = req.params.id;
     let fileName = 'imagen no subida...';
 
+    if(id != req.user.sub){
+        res.status(404).send({mensaje:'usuario invalido'})
+    }
+    
     if(req.files){
 
         let filePath = req.files.image.path;
