@@ -19,9 +19,10 @@ app.use(express.json());
 
 //Routes Controllers
 let routes = require('./Routes/user');
-
+let follow = require('./Routes/follow');
 //Routes
 app.use('/user',routes);
+app.use('/followers',follow);
 
 app.listen(3000,()=>{
     console.log('servidor funcionando en http://localhost:3000');
