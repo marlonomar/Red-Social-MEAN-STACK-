@@ -28,7 +28,8 @@ let User = new Shema({
         required:[true,'the password is required']
     },
     role:{
-        type:String
+        type:String,
+        default : 'user'
     },
     image:{
         type:String,

@@ -41,7 +41,8 @@ function getActiveUsers (req,res){
         }else{
             res.json({
                 success:true,
-                user
+                user,
+                total : user.length
             })
         }
     })
@@ -58,7 +59,8 @@ function getDeleteUsers (req,res){
         }else{
             res.json({
                 success:true,
-                user
+                user,
+                total : user.length
             })
         }
     })
@@ -181,16 +183,35 @@ function reactiveUser(req,res){
 function getUser(req,res){
     let id = req.params.id;
     User.find({_id : id}).exec((err,user)=>{
-        if(err){
-            return res.status(400).json({
-                success: false,
-                err
-            })
-        }
-        res.json({
-            success:true,
-            user:user
-        })
+
+       if(user){
+
+            if(err){
+                return res.status(400).json({
+                    success: false,
+                    err
+                })
+            }
+
+            if(id == req.user.sub){
+                res.json({
+                    success:true,
+                    user:user
+                });
+                
+            }else{
+                res.json({
+                    success:false,
+                    mensaje:'Usuario no existe'
+                }) 
+            }
+       }
+
+       else{
+           return res.status(404).send({
+               mensaje: 'No hay usuarios en la base de datos'
+           })
+       }
     });
 }
 
@@ -244,10 +265,6 @@ function loginUser(req,res){
 function uploadAvatar (req,res){
     let id = req.params.id;
     let fileName = 'imagen no subida...';
-
-    if(id != req.user.sub){
-        res.status(404).send({mensaje:'usuario invalido'})
-    }
     
     if(req.files){
 
@@ -256,25 +273,27 @@ function uploadAvatar (req,res){
         let fileName = fileSplit[1];
         let fileExtSplit = filePath.split('\.');
         let fileExt = fileExtSplit[1];
+
+        if(id != req.user.sub){
+             return removeFile(res,filePath,'usuario invalido')
+        }
        
         if(fileExt == 'jpg' || fileExt == 'png' || fileExt == 'jpeg' || fileExt == 'gif' || fileExt == 'JPG' || fileExt == 'PNG' || fileExt == 'JPEG' || fileExt == 'GIF'){
-            User.findByIdAndUpdate(id,{image : fileName},{new :true} , (err,avatar)=>{
+            User.findByIdAndUpdate(id,{image : fileName},{new :true} , (err,user)=>{
+
                 if(err) return res.status(500).send({mensaje:'la imagen no se ha subido'});
     
-                if(!avatar) return res.status(404).send({mensaje:'el proyecto no existe'});
+                if(!user) return res.status(404).send({mensaje:'el proyecto no existe'});
     
                 return res.status(200).send({
-                    files : avatar
+                    user : user
                 });
         
             })
         }else{
 
-            fs.unlink(filePath,(err)=>{
-                return res.status(200).send({
-                    mensaje : 'formato no permitido'
-                });
-            })
+             return removeFile(res,filePath,'extencion no valida')
+            
         }
 
     }else{
@@ -282,6 +301,31 @@ function uploadAvatar (req,res){
             mensaje : fileName
         });
     }
+
+    function removeFile(res,filePath,mensaje){
+
+        fs.unlink(filePath,(err)=>{
+            return res.status(200).send({
+                mensaje : mensaje
+            });
+        })
+    }
+}
+
+function getImage(req,res){
+
+    let imageFile = req.params.imageFile;
+    let filePath = './uploads/'+imageFile;
+    console.log(req.user)
+    fs.exists(filePath,(exist)=>{
+        if(exist){
+            return res.sendFile(path.resolve(filePath));
+        }else{
+            return res.status(404).send({
+                mensaje: 'no existe esa imagen'
+            })
+        }
+    })
 }
 
 module.exports ={
@@ -294,6 +338,7 @@ module.exports ={
     getDeleteUsers,
     loginUser,
     reactiveUser,
-    uploadAvatar
+    uploadAvatar,
+    getImage
 }
 
