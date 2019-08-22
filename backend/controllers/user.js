@@ -3,20 +3,30 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('../services/token');
+const mongoosePagination = require('mongoose-pagination');
+const path = require('path');
+const fs = require('fs');
+
 
 function getAllUsers (req,res){
-    User.find().exec((err,user)=>{
-        if(err){
-            return res.status(400).json({
-                success: false,
-                err
-            })
-        }else{
-            res.json({
-                success:true,
-                user
-            })
-        }
+    var page = 1;
+    
+    if(req.params.page){
+        page = req.params.page;
+    }
+
+    var itemForPage = 2;
+
+    User.find().sort('name').paginate(page,itemForPage,(err,users,total)=>{
+        if(err) return res.status(403).send({success:false,mensaje:'Error en la peticion'});
+
+        if(!users) return res.status(404).send({success:false,mensaje:'no hay usuarios a mostrar'});
+
+        return res.status(200).send({
+            users,
+            total,
+            pages : Math.ceil(total/itemForPage)
+        });
     })
 }
 
@@ -199,24 +209,24 @@ function loginUser(req,res){
 
                 if(check){
                     user.password = undefined;
-                    
-                   if(user.active == true){
-                      if(params.token){
-                        return res.status(200).json({
-                            token: jwt.createToken(user)
-                        })
-                      }
-                      else{
-                        return res.status(200).json({
-                            success:true,
-                            mensaje: 'Usuario Identificado',
-                            user : user
-                        })
-                      }
-                   }
-                   else{
-                       return res.status(404).send({success:false,mensaje:'Usuario inactivo'})
-                   }
+                    if(user.active == true){
+                        if(params.token){
+                            return res.status(200).json({
+                                token: jwt.createToken(user)
+                            })
+                        }
+                        else{
+                            return res.status(200).json({
+                                success:true,
+                                mensaje: 'Usuario Identificado',
+                                user : user
+                            })
+                        }
+                    }
+                    else{
+                        return res.status(404).send({success:false,mensaje:'Usuario inactivo'})
+                    }
+
                 }
 
                 else{
@@ -231,6 +241,45 @@ function loginUser(req,res){
     })
 }
 
+function uploadAvatar (req,res){
+    let id = req.params.id;
+    let fileName = 'imagen no subida...';
+
+    if(req.files){
+
+        let filePath = req.files.image.path;
+        let fileSplit = filePath.split('\\');
+        let fileName = fileSplit[1];
+        let fileExtSplit = filePath.split('\.');
+        let fileExt = fileExtSplit[1];
+       
+        if(fileExt == 'jpg' || fileExt == 'png' || fileExt == 'jpeg' || fileExt == 'gif' || fileExt == 'JPG' || fileExt == 'PNG' || fileExt == 'JPEG' || fileExt == 'GIF'){
+            User.findByIdAndUpdate(id,{image : fileName},{new :true} , (err,avatar)=>{
+                if(err) return res.status(500).send({mensaje:'la imagen no se ha subido'});
+    
+                if(!avatar) return res.status(404).send({mensaje:'el proyecto no existe'});
+    
+                return res.status(200).send({
+                    files : avatar
+                });
+        
+            })
+        }else{
+
+            fs.unlink(filePath,(err)=>{
+                return res.status(200).send({
+                    mensaje : 'formato no permitido'
+                });
+            })
+        }
+
+    }else{
+        return res.status(200).send({
+            mensaje : fileName
+        });
+    }
+}
+
 module.exports ={
     getAllUsers,
     createUser,
@@ -240,6 +289,7 @@ module.exports ={
     getUser,
     getDeleteUsers,
     loginUser,
-    reactiveUser
+    reactiveUser,
+    uploadAvatar
 }
 

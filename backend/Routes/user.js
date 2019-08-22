@@ -3,15 +3,22 @@
 const express = require('express');
 const userController = require('../controllers/user');
 const api = express.Router();
+const tokenAtutentication = require('../middelwares/autenticarToken');
+const token = tokenAtutentication.ensureAuth;
+const multipart = require('connect-multiparty');
+const multipartMiddelware = multipart({uploadDir:'./uploads'});
 
-api.get('/show-users',userController.getActiveUsers);
-api.get('/user/:id',userController.getUser);
-api.get('/deleted-users',userController.getDeleteUsers);
-api.get('/show-all-users',userController.getAllUsers);
+
+api.get('/show-users',token,userController.getActiveUsers);
+api.get('/user/:id',token,userController.getUser);
+api.get('/deleted-users',token,userController.getDeleteUsers);
+api.get('/show-all-users/:page?',token,userController.getAllUsers);
 api.post('/create-user',userController.createUser);
 api.post('/login',userController.loginUser);
-api.put('/upload-user/:id',userController.UploadUser);
-api.put('/reactive-user/:id',userController.reactiveUser);
-api.delete('/delete-user/:id',userController.DeleteUser);
+api.post('/upload-avatar/:id',multipartMiddelware,token,userController.uploadAvatar);
+api.put('/upload-user/:id',token,userController.UploadUser);
+api.put('/reactive-user/:id',token,userController.reactiveUser);
+api.delete('/delete-user/:id',token,userController.DeleteUser);
+
 
 module.exports = api;

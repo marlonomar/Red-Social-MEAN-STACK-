@@ -2,7 +2,7 @@
 
 const jwt = require('jwt-simple');
 const moment = require('moment');
-const secret = 'soyUnToken:3'
+const secret = 'soyUnToken:3';
 
 exports.createToken = function(user){
 
